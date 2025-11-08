@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import toast from 'react-hot-toast';
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import "./RegisterCard.css";
@@ -73,19 +74,19 @@ const RegisterCard = () => {
         setIsChecking(false);
       }
     }, 600);
-  }, [username]);
+  }, [username, usernameTouched]);
 
   // --- Validation Functions ---
   const validateEmail = (value) => {
     if (!value) return "Email is required";
     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return pattern.test(value) ? true : "Enter a valid email address";
+    return pattern.test(value) ? "" : "Enter a valid email address";
   };
 
   const validatePassword = (value) => {
     if (!value) return "Password is required";
     if (value.length < 6) return "Password must be at least 6 characters";
-    return true;
+    return "";
   };
 
   const validateConfirmPassword = (value) => {
@@ -143,10 +144,28 @@ const RegisterCard = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // 3. Added validation check
+    // Validate all fields before submission
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    const confirmPasswordError = validateConfirmPassword(confirmPassword);
+    const usernameError = !username ? "Username is required" : errors.username;
+
+    // Check if there are any errors
+    if (emailError || passwordError || confirmPasswordError || usernameError) {
+      setErrors({
+        email: emailError,
+        password: passwordError,
+        confirmPassword: confirmPasswordError,
+        username: usernameError
+      });
+      toast.error("Please fix all errors before submitting");
+      return;
+    }
+
+    // Check if passwords match
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
-      return; // Stop submission if passwords don't match
+      toast.error("Passwords do not match!");
+      return;
     }
 
     try {
@@ -157,13 +176,20 @@ const RegisterCard = () => {
 
       // Store JWT token
       localStorage.setItem('authToken', res.data.token);
+      // Clear any existing Supabase session to avoid showing a different logged-in user
+      try {
+        await supabase.auth.signOut();
+      } catch (err) {
+        // ignore
+      }
+      // Notify other tabs/components that auth changed
       window.dispatchEvent(new Event('storage'));
+      window.dispatchEvent(new Event('authChange'));
 
-      alert("Registration successful! Logged in.");
+      toast.success('Account created successfully!');
       navigate("/");
     } catch (error) {
-      const errorMessage = error.response?.data.message || error.message;
-      alert(`Registration failed: ${errorMessage}`);
+      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 

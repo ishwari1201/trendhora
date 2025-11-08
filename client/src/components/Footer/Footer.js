@@ -7,7 +7,6 @@ import EmailIcon from "@mui/icons-material/Email";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import YouTubeIcon from "@mui/icons-material/YouTube";
-import TwitterIcon from "@mui/icons-material/Twitter";
 import TelegramIcon from "@mui/icons-material/Telegram";
 import PinterestIcon from "@mui/icons-material/Pinterest";
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
@@ -17,9 +16,7 @@ import AccessibilityNewIcon from "@mui/icons-material/AccessibilityNew";
 import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import SendIcon from "@mui/icons-material/Send";
 import { SiX } from "react-icons/si";
-import Cart from "../Card/Cart/Cart";
 
 const Footer = () => {
   const [isVisible, setIsVisible] = React.useState(false);
@@ -41,7 +38,7 @@ const Footer = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email) {
+    if (!email || email.trim() === "") {
       toast.error("Please enter your email address", {
         position: "bottom-right",
         autoClose: 3000,
@@ -55,7 +52,9 @@ const Footer = () => {
       return;
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
+    // More robust email validation
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email.trim())) {
       toast.error("Please enter a valid email address", {
         position: "bottom-right",
         autoClose: 3000,
@@ -126,8 +125,8 @@ const Footer = () => {
             height: "45px",
             position: "fixed",
             zIndex: "1000",
-            bottom: "30px",
-            right: "40px",
+            bottom: "20px",
+            right: "95px",
             borderRadius: "50%",
             border: "none",
             transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -175,16 +174,7 @@ const Footer = () => {
                   </div>
                   <form
                     className="footer__newsletter__form"
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const email = e.target.email.value;
-                      if (email) {
-                        toast.success("Thank you for subscribing to our newsletter!");
-                        e.target.reset();
-                      } else {
-                        toast.error("Please enter a valid email address");
-                      }
-                    }}
+                    onSubmit={handleSubmit}
                   >
                     <div className="newsletter__input__container">
                       <input
@@ -192,10 +182,16 @@ const Footer = () => {
                         name="email"
                         placeholder="Enter your email"
                         className="newsletter__input"
-                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isSubmitting}
                       />
-                      <button type="submit" className="newsletter__button">
-                        Subscribe
+                      <button 
+                        type="submit" 
+                        className="newsletter__button"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? "Subscribing..." : "Subscribe"}
                       </button>
                     </div>
                     <p className="newsletter__disclaimer">We respect your privacy. Unsubscribe at any time.</p>

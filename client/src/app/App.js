@@ -22,6 +22,7 @@ import Wishlist from "../components/Wishlist";
 import WishItemsProvider from "../Context/WishItemsProvider";
 import SearchProvider from "../Context/SearchProvider";
 import Toaster from "../components/Toaster/toaster";
+import { Toaster as HotToaster } from 'react-hot-toast';
 import { ThemeProvider } from "../Context/ThemeContext";
 import ChatbotProvider from '../Context/ChatbotProvider';
 import Chatbot from '../components/Chatbot';
@@ -41,6 +42,7 @@ import ContactUs from "../routes/ContactUs";
 import RecentlyViewedSection from "../components/RecentlyViewedSection";
 import PageNotFound from '../components/PageNotFound/PageNotFound';
 import InventoryManagement from '../components/Admin/InventoryManagement/InventoryManagement';
+import ItemCreation from '../components/Admin/ItemCreation/ItemCreation';
 import CartPage from "../routes/CartPage";
 
 
@@ -121,6 +123,7 @@ function App() {
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password/:token" element={<ResetPassword />} />
                   <Route path="/admin/inventory" element={<InventoryManagement />} />
+                  <Route path="/admin/create-item" element={<ItemCreation />} />
                   <Route path="/admin" element={<Wishlist />} />
                   <Route path="*" element={<PageNotFound />} />
                 </Routes>
@@ -137,6 +140,8 @@ function App() {
         </WishItemsProvider>
       </CartItemsProvider>
       <Toaster />
+      {/* react-hot-toast Toaster (shows toast.success/toast.error from react-hot-toast) */}
+      <HotToaster position="top-right" />
     </ThemeProvider>
   );
 }

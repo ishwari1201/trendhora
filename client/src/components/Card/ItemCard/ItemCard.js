@@ -8,6 +8,7 @@ import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { WishItemsContext } from "../../../Context/WishItemsContext";
 import { useComparison } from "../../../Context/ComparisonContext";
 import Toaster from "../../Toaster/toaster";
+import { success as toastSuccess, error as toastError } from '../../../lib/toast';
 import axios from "axios";
 import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
 import { Chip } from "@mui/material";
@@ -22,6 +23,7 @@ const ItemCard = (props) => {
   const [toasterType, setToasterType] = useState("success");
   const [product, setProduct] = useState(null);
   const [stockInfo, setStockInfo] = useState({ stock: 0, stockStatus: 'in_stock' });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { category, id } = useParams();
   const navigate = useNavigate();
   const cartItemsContext = useContext(CartItemsContext);
@@ -30,9 +32,34 @@ const ItemCard = (props) => {
   const currentItem = props.item || product;
   const itemCategory = currentItem?.category || props.category;
 
+  // Check authentication status on mount and when storage changes
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem("authToken");
+      setIsAuthenticated(!!token);
+    };
+
+    // Check on mount
+    checkAuth();
+
+    // Listen for storage events (when token is added/removed)
+    window.addEventListener('storage', checkAuth);
+    
+    // Also listen for custom auth events
+    const handleAuthChange = () => checkAuth();
+    window.addEventListener('authChange', handleAuthChange);
+
+    return () => {
+      window.removeEventListener('storage', checkAuth);
+      window.removeEventListener('authChange', handleAuthChange);
+    };
+  }, []);
+
   // ✅ Helper function to check login
   const isLoggedIn = () => {
-    return !!localStorage.getItem("authToken"); // token exist → logged in
+    const token = localStorage.getItem("authToken");
+    console.log("Checking auth token:", token ? "Token exists" : "No token"); // Debug log
+    return !!token; // token exist → logged in
   };
 
   const handleProductClick = (e) => {
@@ -121,10 +148,7 @@ const ItemCard = (props) => {
     e.stopPropagation();
 
     if (!isLoggedIn()) {
-      setToasterTitle("Login Required");
-      setToasterMessage("Please login to add items to wishlist.");
-      setToasterType("error");
-      setShowToaster(true);
+  toastError('Please login to add items to wishlist.');
   //     navigate("/login");
   
       return;
@@ -136,11 +160,12 @@ const ItemCard = (props) => {
         _id: currentItem._id || currentItem.id,
         category: itemCategory,
       };
-      wishItemsContext.addItem(normalized);
-      setToasterTitle("Success");
-      setToasterMessage("Item added to wishlist!");
-      setToasterType("success");
-      setShowToaster(true);
+      const result = wishItemsContext.toggleItem(normalized);
+      if (result === 'added') {
+        toastSuccess('Item added to wishlist!');
+      } else {
+        toastSuccess('Item removed from wishlist');
+      }
     }
   };
 
